@@ -212,6 +212,16 @@ def create_tables(conn):
     )
     ''')
 
+    # Performance indexes: popular_videos accumulates ~2.6M rows per year of
+    # fetches; analytics endpoints filter by bvid / scan DISTINCT bvid,pubdate
+    # and previously did full-table scans over a 2.4 GB table.
+    cursor.execute('''
+    CREATE INDEX IF NOT EXISTS idx_popular_videos_bvid ON popular_videos(bvid)
+    ''')
+    cursor.execute('''
+    CREATE INDEX IF NOT EXISTS idx_popular_videos_pubdate ON popular_videos(pubdate)
+    ''')
+
     conn.commit()
 
 def insert_video_to_db(conn, video: Dict[str, Any], fetch_time: int, rank: int = 0, auto_commit: bool = False):

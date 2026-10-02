@@ -647,7 +647,7 @@ def validate_year_and_get_table(year: Optional[int]) -> tuple:
     return table_name, target_year, available_years
 
 @router.get("/monthly-stats", summary="获取月度观看统计分析")
-async def get_monthly_stats(
+def get_monthly_stats(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):
@@ -757,7 +757,7 @@ async def get_monthly_stats(
             conn.close()
 
 @router.get("/weekly-stats", summary="获取周度观看统计分析")
-async def get_weekly_stats(
+def get_weekly_stats(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):
@@ -875,7 +875,7 @@ async def get_weekly_stats(
             conn.close()
 
 @router.get("/time-slots", summary="获取时段观看分析")
-async def get_time_slots(
+def get_time_slots(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):
@@ -1011,7 +1011,7 @@ async def get_time_slots(
             conn.close()
 
 @router.get("/continuity", summary="获取观看连续性分析")
-async def get_viewing_continuity(
+def get_viewing_continuity(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):
@@ -1308,7 +1308,7 @@ def generate_viewing_report(viewing_details: dict) -> dict:
     return report
 
 @router.get("/viewing/", summary="获取观看行为数据分析")
-async def get_viewing_details(
+def get_viewing_details(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):
@@ -1368,7 +1368,7 @@ async def get_viewing_details(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/watch-counts", summary="获取重复观看分析")
-async def get_viewing_watch_counts(
+def get_viewing_watch_counts(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):
@@ -1431,7 +1431,7 @@ async def get_viewing_watch_counts(
             conn.close()
 
 @router.get("/completion-rates", summary="获取视频完成率分析")
-async def get_viewing_completion_rates(
+def get_viewing_completion_rates(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):
@@ -1698,7 +1698,7 @@ def generate_author_completion_insights(author_data: dict) -> dict:
     return insights
 
 @router.get("/author-completion", summary="获取UP主完成率分析")
-async def get_viewing_author_completion(
+def get_viewing_author_completion(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):
@@ -1870,7 +1870,7 @@ def generate_tag_analysis_insights(tag_data: dict) -> dict:
     return insights
 
 @router.get("/tag-analysis", summary="获取标签分析")
-async def get_viewing_tag_analysis(
+def get_viewing_tag_analysis(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):
@@ -2081,7 +2081,7 @@ def generate_duration_analysis_insights(duration_data: dict) -> dict:
     return insights
 
 @router.get("/duration-analysis", summary="获取视频时长分析")
-async def get_viewing_duration_analysis(
+def get_viewing_duration_analysis(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):
@@ -2481,7 +2481,7 @@ def save_annual_summary_to_json(summary_data: Dict[str, Any], year: int) -> str:
 
 
 @router.get("/annual-summary/json", summary="获取年度总结 JSON 数据")
-async def get_annual_summary_json(
+def get_annual_summary_json(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用最新可用年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True"),
     save_to_file: bool = Query(False, description="是否同时保存到文件，默认为False")
@@ -2541,7 +2541,7 @@ async def get_annual_summary_json(
 
 
 @router.post("/annual-summary/export", summary="导出年度总结为 JSON 文件")
-async def export_annual_summary_json(
+def export_annual_summary_json(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用最新可用年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True")
 ):

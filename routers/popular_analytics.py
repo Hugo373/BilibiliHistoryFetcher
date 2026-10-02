@@ -727,7 +727,7 @@ def format_duration(seconds):
 
 
 @router.get("/popular-hit-rate", summary="获取热门视频命中率分析")
-async def get_popular_hit_rate(
+def get_popular_hit_rate(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):
@@ -795,7 +795,7 @@ async def get_popular_hit_rate(
             conn.close()
 
 @router.get("/popular-prediction-ability", summary="获取热门预测能力分析")
-async def get_popular_prediction_ability(
+def get_popular_prediction_ability(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):
@@ -863,7 +863,7 @@ async def get_popular_prediction_ability(
             conn.close()
 
 @router.get("/author-popular-association", summary="获取UP主热门关联分析")
-async def get_author_popular_association(
+def get_author_popular_association(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):
@@ -931,7 +931,7 @@ async def get_author_popular_association(
             conn.close()
 
 @router.get("/category-popular-distribution", summary="获取热门视频分区分布分析")
-async def get_category_popular_distribution(
+def get_category_popular_distribution(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):
@@ -999,7 +999,7 @@ async def get_category_popular_distribution(
             conn.close()
 
 @router.get("/duration-popular-distribution", summary="获取热门视频时长分布分析")
-async def get_duration_popular_distribution(
+def get_duration_popular_distribution(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):

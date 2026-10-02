@@ -378,7 +378,7 @@ def validate_year_and_get_table(year: Optional[int]) -> tuple:
     return table_name, target_year, available_years
 
 @router.get("/keyword-analysis", summary="获取标题关键词分析")
-async def get_keyword_analysis(
+def get_keyword_analysis(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):
@@ -462,7 +462,7 @@ async def get_keyword_analysis(
             conn.close()
 
 @router.get("/length-analysis", summary="获取标题长度分析")
-async def get_length_analysis(
+def get_length_analysis(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):
@@ -521,7 +521,7 @@ async def get_length_analysis(
             conn.close()
 
 @router.get("/sentiment-analysis", summary="获取标题情感分析")
-async def get_sentiment_analysis(
+def get_sentiment_analysis(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):
@@ -580,7 +580,7 @@ async def get_sentiment_analysis(
             conn.close()
 
 @router.get("/trend-analysis", summary="获取标题趋势分析")
-async def get_trend_analysis(
+def get_trend_analysis(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):
@@ -639,7 +639,7 @@ async def get_trend_analysis(
             conn.close()
 
 @router.get("/interaction-analysis", summary="获取标题互动分析")
-async def get_interaction_analysis(
+def get_interaction_analysis(
     year: Optional[int] = Query(None, description="要分析的年份，不传则使用当前年份"),
     use_cache: bool = Query(True, description="是否使用缓存，默认为True。如果为False则重新分析数据")
 ):

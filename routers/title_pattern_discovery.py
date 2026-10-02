@@ -14,6 +14,8 @@ from snownlp import SnowNLP
 class PatternCache:
     """模式缓存管理器"""
     def __init__(self, cache_dir: str = None):
+        import threading
+        self._write_lock = threading.Lock()
         if cache_dir is None:
             # 使用项目根目录下的cache文件夹
             import sys
@@ -132,10 +134,13 @@ class PatternCache:
             
             # 确保目录存在
             os.makedirs(os.path.dirname(cache_path), exist_ok=True)
-            
-            with open(cache_path, 'w', encoding='utf-8') as f:
-                json.dump(patterns, f, ensure_ascii=False, indent=2)
-                print(f"成功写入缓存: {cache_path}")
+
+            # Lock: endpoints now execute in a thread pool (see Tier-1 fix).
+            # Multiple analytics requests can race on the same cache key.
+            with self._write_lock:
+                with open(cache_path, 'w', encoding='utf-8') as f:
+                    json.dump(patterns, f, ensure_ascii=False, indent=2)
+                    print(f"成功写入缓存: {cache_path}")
                 
         except Exception as e:
             print(f"写入缓存时出错: {str(e)}")

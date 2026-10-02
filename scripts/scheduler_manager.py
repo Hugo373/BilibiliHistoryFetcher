@@ -334,19 +334,34 @@ class SchedulerManager:
 
         # 创建一个同步的执行函数
         def sync_execute_task(task_name):
+            """Sync entry for the `schedule` library running inside FastAPI's event loop.
+
+            `run_scheduler` is `async def` and drives `schedule.run_pending()` from
+            inside the same loop as the HTTP server.  Calling
+            `loop.run_until_complete()` here therefore always raises
+            `RuntimeError("This event loop is already running")`, silently killing
+            every scheduled task (1128 logged occurrences in production).  We
+            just hand the coroutine to the running loop; errors are recorded by
+            `execute_task_chain` itself."""
+            print(f"\n=== 调度器触发任务执行 ===")
+            print(f"当前时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"任务名称: {task_name}")
+
             try:
                 loop = asyncio.get_running_loop()
             except RuntimeError:
+                # Defensive; not expected while the FastAPI lifespan is active.
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
 
-            try:
+            if loop.is_running():
+                # Fire-and-forget on the running (uvicorn) loop.
+                asyncio.ensure_future(self.execute_task_chain(task_name))
+            else:
+                # Standalone entry point: run to completion.
                 task = loop.create_task(self.execute_task_chain(task_name))
                 loop.run_until_complete(asyncio.gather(task))
-            except Exception as e:
-                print(f"执行任务时发生错误: {str(e)}")
-            finally:
-                if loop and not loop.is_running():
+                if not loop.is_closed():
                     loop.close()
 
         for task_name, task in self.tasks.items():
@@ -561,27 +576,34 @@ class SchedulerManager:
 
         # 创建一个同步的执行函数
         def sync_execute_task(task_name):
+            """Sync entry for the `schedule` library running inside FastAPI's event loop.
+
+            `run_scheduler` is `async def` and drives `schedule.run_pending()` from
+            inside the same loop as the HTTP server.  Calling
+            `loop.run_until_complete()` here therefore always raises
+            `RuntimeError("This event loop is already running")`, silently killing
+            every scheduled task (1128 logged occurrences in production).  We
+            just hand the coroutine to the running loop; errors are recorded by
+            `execute_task_chain` itself."""
             print(f"\n=== 调度器触发任务执行 ===")
             print(f"当前时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             print(f"任务名称: {task_name}")
 
-            # 获取或创建事件循环
             try:
-                loop = asyncio.get_event_loop()
+                loop = asyncio.get_running_loop()
             except RuntimeError:
+                # Defensive; not expected while the FastAPI lifespan is active.
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
 
-            # 在事件循环中执行异步任务
-            try:
-                # 创建任务并等待其完成
+            if loop.is_running():
+                # Fire-and-forget on the running (uvicorn) loop.
+                asyncio.ensure_future(self.execute_task_chain(task_name))
+            else:
+                # Standalone entry point: run to completion.
                 task = loop.create_task(self.execute_task_chain(task_name))
                 loop.run_until_complete(asyncio.gather(task))
-            except Exception as e:
-                print(f"执行任务时发生错误: {str(e)}")
-            finally:
-                # 如果我们创建了新的事件循环，需要关闭它
-                if loop and not loop.is_running():
+                if not loop.is_closed():
                     loop.close()
 
         for task_name, task in self.tasks.items():
@@ -954,58 +976,28 @@ class SchedulerManager:
             raise
 
     def sync_execute_task(self, task_name):
-        """同步执行任务的包装函数"""
+        """Sync wrapper that always schedules on the running loop.
+
+        Same anti-pattern as `schedule_tasks`'s `sync_execute_task`: the original
+        called `loop.run_until_complete` on an already-running loop and crashed
+        every scheduled task.  Hand the coroutine off to the running loop; run
+        to completion only when no loop is currently running.
+        """
         print(f"\n=== 同步执行任务: {task_name} ===")
         print(f"当前时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
         try:
-            # 获取当前事件循环，如果没有则创建新的
-            try:
-                loop = asyncio.get_running_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                should_close_loop = True
-            else:
-                should_close_loop = False
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
 
-            # 在事件循环中执行任务
-            try:
-                # 创建任务并等待其完成
-                if loop.is_running():
-                    try:
-                        # 如果循环已经在运行，使用asyncio.run_coroutine_threadsafe
-                        future = asyncio.run_coroutine_threadsafe(
-                            self.execute_task_chain(task_name),
-                            loop
-                        )
-                        result = future.result()
-                    except RuntimeError as re:
-                        # 处理"This event loop is already running"错误
-                        if "This event loop is already running" in str(re):
-                            print(f"执行任务时发生事件循环错误: {str(re)}，任务将被跳过")
-                            # 记录错误
-                            self._record_task_failure(
-                                task_name,
-                                datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                f"事件循环错误: {str(re)}",
-                                "scheduler"
-                            )
-                            return False
-                        else:
-                            raise  # 重新引发其他RuntimeError
-                else:
-                    # 如果循环未运行，正常执行
-                    task = asyncio.ensure_future(self.execute_task_chain(task_name), loop=loop)
-                    result = loop.run_until_complete(task)
-                return result
-            finally:
-                # 只关闭我们创建的事件循环
-                if should_close_loop and not loop.is_running():
-                    loop.close()
-        except Exception as e:
-            print(f"执行任务时发生错误: {str(e)}")
-            return False
+        if loop.is_running():
+            asyncio.ensure_future(self.execute_task_chain(task_name), loop=loop)
+            return True
+
+        task = asyncio.ensure_future(self.execute_task_chain(task_name), loop=loop)
+        return loop.run_until_complete(task)
 
     async def _execute_single_task(self, task_id: str, is_sub_task: bool = False) -> bool:
         """执行单个任务（主任务或子任务）"""
